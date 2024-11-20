@@ -1,0 +1,16 @@
+# 残差结构的空间注意力模块
+class SpatialAttentionWithResidual(nn.Module):
+    def __init__(self, kernel_size=7):
+        super(SpatialAttentionWithResidual, self).__init__()
+        assert kernel_size in (3, 7), "Kernel size must be 3 or 7"
+        padding = 3 if kernel_size == 7 else 1
+        self.conv1 = nn.Conv2d(2, 1, kernel_size, padding=padding, bias=False)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        avg_out = torch.mean(x, dim=1, keepdim=True)
+        max_out, _ = torch.max(x, dim=1, keepdim=True)
+        attention = torch.cat([avg_out, max_out], dim=1)
+        attention = self.sigmoid(self.conv1(attention))
+     
+        return x + x * attention
